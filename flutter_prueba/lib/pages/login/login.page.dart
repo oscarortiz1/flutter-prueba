@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_prueba/shared/services/notification_service.dart';
+import 'package:go_router/go_router.dart';
 import 'bloc/login_bloc.dart';
 import 'bloc/login_event.dart';
 import 'bloc/login_state.dart';
@@ -8,7 +9,6 @@ import '../../shared/components/primary_text_field.dart';
 import '../../shared/components/otp_input.dart';
 import '../../shared/components/brand_logo.dart';
 import '../../shared/components/app_background.dart';
-import '../../shared/components/social_buttons.dart';
 import '../../shared/components/info_card.dart';
 import '../../shared/components/primary_button.dart';
 
@@ -23,6 +23,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   bool _showOtp = false;
 
@@ -53,13 +54,15 @@ class _LoginPageState extends State<LoginPage>
   void dispose() {
     _animController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   void _goToOtp() {
     final email = _emailController.text.trim();
-    if (email.isEmpty) return;
-    context.read<LoginBloc>().add(SendOtp(email));
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) return;
+    context.read<LoginBloc>().add(SendOtp(email, password));
     setState(() => _showOtp = true);
   }
 
@@ -67,44 +70,60 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          AppBackground(
-            topColor: Theme.of(context).colorScheme.primary.withOpacity(0.9),
-            bottomColor: Theme.of(
-              context,
-            ).colorScheme.secondary.withOpacity(0.9),
-          ),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 700;
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: isWide ? 900 : 420),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 24,
-                      ),
-                      child: AnimatedCrossFade(
-                        firstChild: _buildAuthCard(context, isWide),
-                        secondChild: _buildOtpCard(context, isWide),
-                        crossFadeState: _showOtp
-                            ? CrossFadeState.showSecond
-                            : CrossFadeState.showFirst,
-                        duration: const Duration(milliseconds: 500),
-                        firstCurve: Curves.easeOut,
-                        secondCurve: Curves.easeIn,
+    return BlocListener<LoginBloc, LoginState>(
+      listener: (context, state) {
+        // debug state changes
+        // ignore: avoid_print
+        print('LoginPage listener: state -> ${state.runtimeType}');
+        if (state is LoginFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+        if (state is OtpVerified) {
+          // hide otp UI and navigate
+          setState(() => _showOtp = false);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Verificado, entrando...')));
+          // explicit router navigation
+          GoRouter.of(context).go('/app/home');
+        }
+      },
+      child: Scaffold(
+        // allow scaffold to resize when keyboard appears
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            AppBackground(
+              topColor: Theme.of(context).colorScheme.primary.withOpacity(0.9),
+              bottomColor: Theme.of(context).colorScheme.secondary.withOpacity(0.9),
+            ),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth > 700;
+                  return Center(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: isWide ? 900 : 420),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                          child: AnimatedCrossFade(
+                            firstChild: _buildAuthCard(context, isWide),
+                            secondChild: _buildOtpCard(context, isWide),
+                            crossFadeState: _showOtp ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                            duration: const Duration(milliseconds: 500),
+                            firstCurve: Curves.easeOut,
+                            secondCurve: Curves.easeIn,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -161,31 +180,39 @@ class _LoginPageState extends State<LoginPage>
           hint: 'Correo electrónico',
           icon: Icons.email,
         ),
+        const SizedBox(height: 12),
+        PrimaryTextField(
+          controller: _passwordController,
+          hint: 'Contraseña',
+          icon: Icons.lock,
+          obscure: true,
+        ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: PrimaryButton(
                 onPressed: _goToOtp,
-                child: const Text(
+                child: Text(
                   'Enviar código',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {},
-            child: Text(
-              '¿Olvidaste tu contraseña?',
-              style: Theme.of(context).textTheme.bodyMedium,
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => context.go('/register'),
+                child: const Text('Registrarse'),
+              ),
             ),
-          ),
+          ],
         ),
+        const SizedBox(height: 10),
       ],
     );
   }
@@ -195,7 +222,6 @@ class _LoginPageState extends State<LoginPage>
       mainAxisSize: MainAxisSize.min,
       children: const [
         SizedBox(height: 6),
-        SocialButtonsRow(),
         SizedBox(height: 18),
         InfoCard(),
       ],
