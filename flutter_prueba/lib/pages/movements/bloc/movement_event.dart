@@ -8,6 +8,11 @@ class RefreshMovements extends MovementEvent {}
 
 class LoadMoreMovements extends MovementEvent {}
 
+class GoToPage extends MovementEvent {
+  final int page;
+  GoToPage(this.page);
+}
+
 class ApplyMovementsFilter extends MovementEvent {
   final String? query;
   ApplyMovementsFilter(this.query);

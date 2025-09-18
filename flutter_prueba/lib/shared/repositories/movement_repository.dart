@@ -77,14 +77,10 @@ class MovementRepository {
     } on MissingPluginException catch (_) {
       // In-memory fallback: filter and then return slice
       Iterable<Movement> items = _inMemory;
-  if (query != null && query.isNotEmpty) {
-    final q = query.toLowerCase();
-    items = items.where((m) =>
-    (m.description ?? '').toLowerCase().contains(q) ||
-    m.accountFrom.toLowerCase().contains(q) ||
-    m.accountTo.toLowerCase().contains(q) ||
-    m.type.toLowerCase().contains(q));
-  }
+      if (query != null && query.isNotEmpty) {
+        final q = query.toLowerCase();
+        items = items.where((m) => (m.description ?? '').toLowerCase().contains(q) || m.accountFrom.toLowerCase().contains(q) || m.accountTo.toLowerCase().contains(q) || m.type.toLowerCase().contains(q));
+      }
       final list = items.toList();
       final start = offset;
       if (start >= list.length) return [];
@@ -92,19 +88,37 @@ class MovementRepository {
       return list.sublist(start, end);
     } on UnsupportedError catch (_) {
       Iterable<Movement> items = _inMemory;
-  if (query != null && query.isNotEmpty) {
-    final q = query.toLowerCase();
-    items = items.where((m) =>
-    (m.description ?? '').toLowerCase().contains(q) ||
-    m.accountFrom.toLowerCase().contains(q) ||
-    m.accountTo.toLowerCase().contains(q) ||
-    m.type.toLowerCase().contains(q));
-  }
+      if (query != null && query.isNotEmpty) {
+        final q = query.toLowerCase();
+        items = items.where((m) => (m.description ?? '').toLowerCase().contains(q) || m.accountFrom.toLowerCase().contains(q) || m.accountTo.toLowerCase().contains(q) || m.type.toLowerCase().contains(q));
+      }
       final list = items.toList();
       final start = offset;
       if (start >= list.length) return [];
       final end = (start + limit) > list.length ? list.length : (start + limit);
       return list.sublist(start, end);
+    }
+  }
+
+  /// Fetch a page from server and return both list and metadata.
+  /// Returns: { 'movements': List<Movement>, 'total': int, 'totalPages': int }
+  Future<Map<String, dynamic>> fetchPageWithMeta(int page, {int limit = 20, String? query}) async {
+    try {
+      final resp = await ApiService.instance.getMovimientosPaged(page: page, limit: limit, query: query);
+      if (resp.statusCode == 200) {
+        final data = resp.data as Map<String, dynamic>;
+        final items = data['data'] as List<dynamic>;
+        for (final doc in items) {
+          await upsertFromServer(doc as Map<String, dynamic>);
+        }
+        final local = await fetchPage(page, limit: limit, query: query);
+        return {'movements': local, 'total': data['total'] ?? 0, 'totalPages': data['totalPages'] ?? 0};
+      }
+      return {'movements': <Movement>[], 'total': 0, 'totalPages': 0};
+    } catch (_) {
+      // network error -> fallback to local paged fetch
+      final local = await fetchPage(page, limit: limit, query: query);
+      return {'movements': local, 'total': local.length, 'totalPages': 1};
     }
   }
 

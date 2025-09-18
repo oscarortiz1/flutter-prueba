@@ -54,13 +54,8 @@ class _LayoutPageState extends State<LayoutPage> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi App'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
-        ],
+        
+       
       ),
       drawer: isWide
           ? null

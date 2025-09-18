@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'movement_event.dart';
 import 'movement_state.dart';
 import '../../../shared/repositories/movement_repository.dart';
+import '../../../shared/models/movement.dart';
 
 class MovementBloc extends Bloc<MovementEvent, MovementState> {
   final MovementRepository _repo;
@@ -11,41 +12,60 @@ class MovementBloc extends Bloc<MovementEvent, MovementState> {
     on<LoadMovements>((_, emit) async {
       emit(MovementsLoading());
       try {
-        // prefer cached local results; if empty, try server once
-        final list = await _repo.fetchCachedOrServer();
-        final hasReachedMax = list.length < pageSize;
-        emit(MovementsLoaded(list, page: 0, hasReachedMax: hasReachedMax));
+        // load first page (page 0) using server if needed
+        final meta = await _repo.fetchPageWithMeta(0, limit: pageSize);
+  final list = (meta['movements'] as List).cast<Movement>();
+        final total = meta['total'] as int? ?? 0;
+        final totalPages = meta['totalPages'] as int? ?? 0;
+        final hasReachedMax = (0 >= (totalPages - 1));
+        emit(MovementsLoaded(List.of(list), page: 0, hasReachedMax: hasReachedMax, total: total, totalPages: totalPages));
       } catch (e) {
         emit(MovementsError(e.toString()));
       }
     });
 
     on<RefreshMovements>((_, emit) async {
-      emit(MovementsLoading());
-      try {
-  // Force server pull and repopulate local cache
-  _repo.resetServerCheck();
-  final list = await _repo.fetchCachedOrServer();
-        final hasReachedMax = list.length < pageSize;
-        emit(MovementsLoaded(list, page: 0, hasReachedMax: hasReachedMax));
-      } catch (e) {
-        emit(MovementsError(e.toString()));
-      }
-    });
-
-    on<LoadMoreMovements>((event, emit) async {
       if (state is MovementsLoaded) {
         final cur = state as MovementsLoaded;
-        if (cur.hasReachedMax) return;
-        final nextPage = cur.page + 1;
+        emit(MovementsLoading());
         try {
-          final list = await _repo.fetchPage(nextPage, limit: pageSize, query: cur.query);
-          final hasReachedMax = list.length < pageSize;
-          final combined = List.of(cur.movements)..addAll(list);
-          emit(MovementsLoaded(combined, page: nextPage, hasReachedMax: hasReachedMax, query: cur.query));
+          final meta = await _repo.fetchPageWithMeta(cur.page, limit: pageSize, query: cur.query);
+          final list = (meta['movements'] as List).cast<Movement>();
+          final total = meta['total'] as int? ?? 0;
+          final totalPages = meta['totalPages'] as int? ?? 0;
+          final hasReachedMax = (cur.page >= (totalPages - 1));
+          emit(MovementsLoaded(List.of(list), page: cur.page, hasReachedMax: hasReachedMax, query: cur.query, total: total, totalPages: totalPages));
         } catch (e) {
           emit(MovementsError(e.toString()));
         }
+      } else {
+        // fallback to full load
+        add(LoadMovements());
+      }
+    });
+
+    // LoadMore is retained for compatibility but UI uses page controls now.
+    on<LoadMoreMovements>((event, emit) async {
+      // no-op or alias to go to next page
+      if (state is MovementsLoaded) {
+        final cur = state as MovementsLoaded;
+        if (cur.page < (cur.totalPages - 1)) {
+          add(GoToPage(cur.page + 1));
+        }
+      }
+    });
+
+    on<GoToPage>((event, emit) async {
+      emit(MovementsLoading());
+      try {
+        final meta = await _repo.fetchPageWithMeta(event.page, limit: pageSize);
+  final list = (meta['movements'] as List).cast<Movement>();
+        final total = meta['total'] as int? ?? 0;
+        final totalPages = meta['totalPages'] as int? ?? 0;
+        final hasReachedMax = (event.page >= (totalPages - 1));
+        emit(MovementsLoaded(List.of(list), page: event.page, hasReachedMax: hasReachedMax, total: total, totalPages: totalPages));
+      } catch (e) {
+        emit(MovementsError(e.toString()));
       }
     });
 

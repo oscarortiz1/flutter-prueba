@@ -69,6 +69,12 @@ class ApiService {
     return _dio.get('/movimientos');
   }
 
+  Future<Response> getMovimientosPaged({int page = 0, int limit = 20, String? query}) async {
+    final qp = <String, dynamic>{'page': page.toString(), 'limit': limit.toString()};
+    if (query != null && query.isNotEmpty) qp['q'] = query;
+    return _dio.get('/movimientos', queryParameters: qp);
+  }
+
   Future<Response> deleteMovimiento(String serverId) async {
     return _dio.delete('/movimientos/$serverId');
   }

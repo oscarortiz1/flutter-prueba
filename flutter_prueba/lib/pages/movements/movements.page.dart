@@ -113,7 +113,7 @@ class _MovementsViewState extends State<MovementsView> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    // remove infinite-scroll listener; pagination uses explicit controls
     _staggerController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600))..forward();
     // Trigger initial load when the view is mounted and the BlocProvider is available
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -134,17 +134,10 @@ class _MovementsViewState extends State<MovementsView> with SingleTickerProvider
   @override
   void dispose() {
     _debounce?.cancel();
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
     _staggerController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      context.read<MovementBloc>().add(LoadMoreMovements());
-    }
   }
 
   void _onSearchChanged(String v) {
@@ -240,11 +233,23 @@ class _MovementsViewState extends State<MovementsView> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Movimientos')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddModal,
-        icon: const Icon(Icons.add),
-        label: const Text('Nuevo'),
+      appBar: AppBar(
+        title: const Text('Movimientos'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: ElevatedButton.icon(
+              onPressed: _openAddModal,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Nuevo'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -260,26 +265,47 @@ class _MovementsViewState extends State<MovementsView> with SingleTickerProvider
                 if (state is MovementsLoaded) {
                   final list = state.movements;
                   if (list.isEmpty) return const Center(child: Text('No hay movimientos'));
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      context.read<MovementBloc>().add(RefreshMovements());
-                      await Future.delayed(const Duration(milliseconds: 600));
-                    },
-                    child: ListView.separated(
-                      controller: _scrollController,
-                      itemCount: list.length + (state.hasReachedMax ? 0 : 1),
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, i) {
-                        if (i >= list.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-                        final m = list[i];
-                        return Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: _buildCard(m, i));
-                      },
-                    ),
+                  // Page content with pull-to-refresh
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<MovementBloc>().add(RefreshMovements());
+                            await Future.delayed(const Duration(milliseconds: 600));
+                          },
+                          child: ListView.separated(
+                            controller: _scrollController,
+                            itemCount: list.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            itemBuilder: (context, i) {
+                              final m = list[i];
+                              return Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: _buildCard(m, i));
+                            },
+                          ),
+                        ),
+                      ),
+                      // Paginator controls
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: state.page > 0 ? () => context.read<MovementBloc>().add(GoToPage(state.page - 1)) : null,
+                              child: const Text('Anterior'),
+                            ),
+                            const SizedBox(width: 12),
+                            Text('Página ${state.page + 1} de ${state.totalPages}'),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: state.page < (state.totalPages - 1) ? () => context.read<MovementBloc>().add(GoToPage(state.page + 1)) : null,
+                              child: const Text('Siguiente'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 }
                 return const SizedBox.shrink();

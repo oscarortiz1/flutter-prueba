@@ -9,8 +9,10 @@ class MovementsLoaded extends MovementState {
   final int page; // zero-based
   final bool hasReachedMax;
   final String? query;
+  final int total;
+  final int totalPages;
 
-  MovementsLoaded(this.movements, {this.page = 0, this.hasReachedMax = false, this.query});
+  MovementsLoaded(this.movements, {this.page = 0, this.hasReachedMax = false, this.query, this.total = 0, this.totalPages = 0});
 }
 
 class MovementsError extends MovementState {
