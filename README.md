@@ -4,6 +4,14 @@ Este README explica cómo ejecutar la app Flutter y cómo enlazarla con el mock 
 
 [Ver video en YouTube](https://youtu.be/pVl4b69sT-Y)
 
+![Captura 1](imagenes/Captura%20de%20pantalla%202025-09-18%20201311.png)
+![Captura 2](imagenes/Captura%20de%20pantalla%202025-09-18%20201323.png)
+![Captura 3](imagenes/Captura%20de%20pantalla%202025-09-18%20201332.png)
+![Captura 4](imagenes/Captura%20de%20pantalla%202025-09-18%20201349.png)
+![Captura 5](imagenes/Captura%20de%20pantalla%202025-09-18%20201357.png)
+![Captura 6](imagenes/Captura%20de%20pantalla%202025-09-18%20201406.png)
+
+
 Resumen del alcance implementado
 - Autenticación simple con email y código OTP (simulado en el backend).
 - Listado paginado de movimientos (mínimo 20 por página) con pull-to-refresh.
