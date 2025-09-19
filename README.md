@@ -5,7 +5,7 @@ Este README explica cómo ejecutar la app Flutter y cómo enlazarla con el mock 
 # ⚠️ Importante
 
 **DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE:**  
-BASE_URL=https://flutter-prueba-backend.onrender.com
+[BASE_URL=https://flutter-prueba-backend.onrender.com](https://flutter-prueba-backend.onrender.com/api)
 
 [Ver video en YouTube](https://youtu.be/pVl4b69sT-Y)
 
@@ -66,7 +66,7 @@ Cómo ejecutar (FRONT)
 # ⚠️ Importante
 
 **DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE:**  
-BASE_URL=https://flutter-prueba-backend.onrender.com
+[BASE_URL=https://flutter-prueba-backend.onrender.com](https://flutter-prueba-backend.onrender.com/api)
 
 1. Asegúrate de tener Flutter SDK instalado y actualizado.
 2. En la carpeta del proyecto Flutter:
