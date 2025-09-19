@@ -66,7 +66,7 @@ Cómo ejecutar (FRONT)
 # ⚠️ Importante
 
 **DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE:**  
-[BASE_URL=https://flutter-prueba-backend.onrender.com](https://flutter-prueba-backend.onrender.com/api)
+https://flutter-prueba-backend.onrender.com/api
 
 1. Asegúrate de tener Flutter SDK instalado y actualizado.
 2. En la carpeta del proyecto Flutter:
