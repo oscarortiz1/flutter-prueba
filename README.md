@@ -2,6 +2,8 @@
 
 Este README explica cómo ejecutar la app Flutter y cómo enlazarla con el mock API. Contiene además decisiones de arquitectura, cómo se cumple el alcance solicitado y referencias a la documentación del backend (Swagger).
 
+[Ver video en YouTube]([https://www.youtube.com/watch?v=XXXXXXX](https://youtu.be/pVl4b69sT-Y))
+
 Resumen del alcance implementado
 - Autenticación simple con email y código OTP (simulado en el backend).
 - Listado paginado de movimientos (mínimo 20 por página) con pull-to-refresh.
