@@ -1,22 +1,29 @@
 # Flutter Prueba — Frontend
 
-Este README describe cómo ejecutar la app Flutter incluida en este repositorio, la arquitectura general, las decisiones de diseño y cómo cumple los requisitos del enunciado.
+Este README explica cómo ejecutar la app Flutter y cómo enlazarla con el mock API. Contiene además decisiones de arquitectura, cómo se cumple el alcance solicitado y referencias a la documentación del backend (Swagger).
 
-> Alcance general implementado (resumen):
->- Autenticación simple con email y código OTP (simulado / local notification para pruebas).
->- Listado paginado de movimientos (mínimo 20 por página) con pull-to-refresh.
->- Modo offline: si no hay conexión, la app muestra los últimos datos almacenados en SQLite y muestra un aviso al usuario.
->- Manejo de errores: mensajes amigables y posibilidad de reintentar operaciones.
->- Tema claro/oscuro completo.
->- Animaciones sutiles para tarjetas y transición.
+Resumen del alcance implementado
+- Autenticación simple con email y código OTP (simulado en el backend).
+- Listado paginado de movimientos (mínimo 20 por página) con pull-to-refresh.
+- Modo offline: si no hay conexión, la app muestra los últimos datos almacenados en SQLite y muestra un aviso al usuario.
+- Manejo de errores: mensajes amigables y posibilidad de reintentar.
+- Modo claro y oscuro.
+- Animaciones sutiles en tarjetas y transiciones.
 
-Condición especial (implementado / notas):
-- Crear tu propio mock API: el repositorio incluye un backend NestJS (`../flutter_prueba_backend`) que funciona como API mock (endpoints: `/auth`, `/movimientos`, etc.).
-- Manejo de estados: utilizo BLoC (`flutter_bloc`) para la mayoría de flujos (auth, movimientos). Justificación abajo.
-- Almacenamiento offline: implementado con SQLite a través de `sqflite` y una abstracción `DBProvider`. (Si prefieres ISAR, puede migrarse; hoy la app usa SQLite por compatibilidad y simplicidad.)
-- Pruebas unitarias: hay tests unitarios y widget tests en `test/` que cubren: repositorios, blocs y widgets clave.
+Referencia al Mock API y Swagger
+- El backend mock expuesto públicamente tiene la UI de Swagger en:
 
-Repositorio — estructura clave
+  https://flutter-prueba-backend.onrender.com/api
+
+  Allí puedes explorar todos los endpoints (`/auth`, `/movimientos`, etc.), ver los modelos y probar peticiones desde el navegador.
+
+Stack y decisiones clave
+- Flutter (stable)
+- State management: BLoC (`flutter_bloc`). Justificación: separación UI / lógica de negocio, testabilidad y compatibilidad con flujos por eventos (paginación, refresh, sync).
+- Offline storage: SQLite via `sqflite` y capa `DBProvider` + `MovementRepository` con upsert desde servidor y colas de sync.
+- API client: `Dio` con interceptor que inyecta `Authorization` (access token) y reintenta con `refresh_token` ante 401.
+
+Estructura principal del proyecto
 ```
 lib/
   main.dart                # entrypoint, carga .env y configura ApiService
@@ -34,78 +41,51 @@ lib/
     models/
       movement.dart
 test/
-  movement_repository_test.dart
-  widget_test.dart
+  unit/                    # tests unitarios
+  widget/                  # widget tests
 flutter_prueba_backend/    # mock API (NestJS)
-  src/
-    movimientos/
-    auth/
 ```
 
-Requisitos y cómo correr
+Cómo ejecutar (FRONT)
 
-1) Backend (mock API - NestJS)
+1. Asegúrate de tener Flutter SDK instalado y actualizado.
+2. En la carpeta del proyecto Flutter:
 
-Requisitos: Node.js v18+ y npm
-
-Desde la carpeta `flutter_prueba_backend`:
-
-```powershell
-npm install
-npm run build   # (o `nest build` si usas `@nestjs/cli` global)
-npm run start   # ejecuta `node dist/main.js`
-# en desarrollo puedes usar:
-npm run start:dev
-```
-
-Endpoints principales (resumen):
-- `POST /auth/otp` — solicita/crea OTP para email (mock)
-- `POST /auth/verify` — verifica OTP, retorna access_token & refresh_token
-- `POST /auth/refresh` — refresh token
-- `GET /movimientos` — obtiene movimientos; soporta query `?page=&limit=&q=` y devuelve `{ data, total, totalPages }`
-- `POST /movimientos`, `DELETE /movimientos/:id`
-
-2) Frontend (Flutter app)
-
-Requisitos: Flutter SDK (stable), `flutter pub get` ejecutado.
-
-Preparar entorno:
-- Crea un archivo `.env` en la raíz del proyecto Flutter (`flutter_prueba/.env`) con:
-```
-BASE_URL=http://localhost:3000
-```
-(O usa la URL remota si prefieres, p.ej. `https://flutter-prueba-backend.onrender.com`)
-
-Comandos:
 ```powershell
 flutter pub get
-flutter run           # o `flutter run -d <device>`
+```
+
+3. Configura la URL del backend en `.env` (archivo en la raíz del proyecto Flutter):
+
+```
+BASE_URL=https://flutter-prueba-backend.onrender.com
+```
+
+4. Ejecuta la app en un emulador/dispositivo:
+
+```powershell
+flutter run
+```
+
+5. Ejecuta tests:
+
+```powershell
 flutter test --coverage
 flutter analyze
 ```
 
-Arquitectura y decisiones
+Notas sobre el uso de Swagger y el backend
+- Desde la app, `ApiService` se inicializa con `BASE_URL` tomado del archivo `.env` (si existe), por eso puedes apuntar la app a la URL pública del backend (`https://flutter-prueba-backend.onrender.com`) para probarla sin ejecutar el backend localmente.
+- Para desarrollo local: ejecuta el backend en `localhost:3000` y coloca `BASE_URL=http://localhost:3000` en `.env`.
 
-- State management: BLoC
-  - Por qué: separa claramente UI y lógica de negocio, facilita testing y trazabilidad, y encaja bien con la estructura de eventos/estados que requiere paginado, refresh y sincronización.
-- Almacenamiento offline: SQLite (via `sqflite`) y una capa `MovementRepository` que abstrae la fuente de datos. Se implementa `upsertFromServer()` y colas de sincronización para cambios offline.
-- API client: `Dio` con interceptor que inyecta `Authorization` y reintenta usando `refresh_token` si recibe 401.
-- Paginación: servidor provee `totalPages`, frontend muestra controles de paginador (Anterior / Página X de Y / Siguiente). Tamaño de página por defecto: 20.
-- Tests: tests unitarios para repositorio y bloc; widget tests para vistas críticas.
+Requisitos y entregables
+- Código fuente con historial de commits (local o remoto).
+- README (este)
+- Evidencia de ejecución: tests, capturas o video (agregar al paquete de entrega).
 
-Cómo cumple los entregables
+Mejoras sugeridas
+- Migrar a ISAR para almacenamiento offline si buscas mayor rendimiento y consultas más complejas.
+- Añadir tests de integración que levanten el backend mock y la app para validar flujos E2E.
 
-- Código fuente
-  - Está todo en este repositorio; preserva el historial de commits localmente.
-- README breve (este documento)
-- Cómo ejecutar mock API y la app
-  - Instrucciones arriba.
-- Evidencia de ejecución
-  - Incluye tests en `test/`; puedes agregar capturas de pantalla o un corto video y subirlo junto al repositorio.
-
-Notas finales y mejoras sugeridas
-
-- Si deseas migrar a ISAR para mejor rendimiento offline y consultas más rápidas, puedo proveer una PR que lo migre.
-- Puedo añadir pruebas E2E (integration tests) que arranquen la API mock y la app para validar flujos críticos.
-
-Contacta si quieres que genere también un ZIP con el historial de commits o que suba el repositorio a un remoto privado (te doy instrucciones).
+Contacto
+Si necesitas que incluya capturas de pantalla, un breve video de demostración o un archivo ZIP con el historial de commits, lo genero y lo subo según me indiques.
