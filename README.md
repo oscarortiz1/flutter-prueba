@@ -2,6 +2,11 @@
 
 Este README explica cómo ejecutar la app Flutter y cómo enlazarla con el mock API. Contiene además decisiones de arquitectura, cómo se cumple el alcance solicitado y referencias a la documentación del backend (Swagger).
 
+# ⚠️ Importante
+
+**DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE:**  
+BASE_URL=https://flutter-prueba-backend.onrender.com
+
 [Ver video en YouTube](https://youtu.be/pVl4b69sT-Y)
 
 ![Captura 1](imagenes/Captura%20de%20pantalla%202025-09-18%20201311.png)
@@ -58,7 +63,10 @@ flutter_prueba_backend/    # mock API (NestJS)
 
 Cómo ejecutar (FRONT)
 
-#DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE: BASE_URL=https://flutter-prueba-backend.onrender.com
+# ⚠️ Importante
+
+**DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE:**  
+BASE_URL=https://flutter-prueba-backend.onrender.com
 
 1. Asegúrate de tener Flutter SDK instalado y actualizado.
 2. En la carpeta del proyecto Flutter:
