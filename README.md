@@ -4,7 +4,7 @@ Este README explica cómo ejecutar la app Flutter y cómo enlazarla con el mock 
 
 # ⚠️ Importante
 
-**DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE:**  
+**DEBES INGRESAR A ESTE LINK PARA QUE EL BACK END EN RENDER INICIALICE:**  
 https://flutter-prueba-backend.onrender.com/api
 
 # VIDEO
