@@ -316,21 +316,6 @@ class _LoginPageState extends State<LoginPage>
                 );
               },
             ),
-            const SizedBox(height: 18),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 28,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Verificar'),
-            ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {},
