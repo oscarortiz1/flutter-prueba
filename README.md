@@ -58,6 +58,8 @@ flutter_prueba_backend/    # mock API (NestJS)
 
 Cómo ejecutar (FRONT)
 
+#DEBES INGRESAR A ESTE LINK PARA QUE RENDER INICIALICE: BASE_URL=https://flutter-prueba-backend.onrender.com
+
 1. Asegúrate de tener Flutter SDK instalado y actualizado.
 2. En la carpeta del proyecto Flutter:
 
