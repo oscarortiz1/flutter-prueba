@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_prueba/shared/utils/router.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -12,20 +13,12 @@ import 'shared/services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize API client. Auto-select loopback for Android emulator vs localhost
-  String host;
-  if (kIsWeb) {
-    // when running on web, use same origin
-    host = Uri.base.host.isEmpty ? 'localhost' : Uri.base.host;
-  } else if (Platform.isAndroid) {
-    // Android emulator host loopback
-    host = '192.168.1.7';
-  } else {
-    // iOS simulator or desktop
-    host = 'localhost';
-  }
-  final baseUrl = 'http://$host:3000';
+  // Load environment variables (optional `.env`) and initialize API client.
+  await dotenv.load();
+ 
+  String baseUrl =  dotenv.env['BASE_URL']!;
+ 
+  
   // ignore: avoid_print
   print('ApiService baseUrl set to: $baseUrl');
   ApiService.init(baseUrl: baseUrl);
